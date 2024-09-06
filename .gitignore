@@ -1,0 +1,10 @@
+# Rust artifacts
+/target
+**/*.rs.bk
+Cargo.lock
+
+# Tauri artifacts
+/src-tauri/target
+
+# macOS artifacts
+.DS_Store
