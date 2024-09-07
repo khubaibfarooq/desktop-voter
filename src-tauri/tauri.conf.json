@@ -1,7 +1,7 @@
 {
   "build": {
-    "beforeBuildCommand": "",
     "beforeDevCommand": "",
+    "beforeBuildCommand": "",
     "devPath": "../ui",
     "distDir": "../ui",
     "withGlobalTauri": true
@@ -13,44 +13,23 @@
   "tauri": {
     "allowlist": {
       "all": false,
-      "http": {
-        "all": true,
-        "request": true,
-        "scope": ["http://xenblocks.io:4447/*", "http://xenminer.mooo.com:5000/*"]
+      "shell": {
+        "all": false,
+        "open": true
       }
     },
     "bundle": {
       "active": true,
-      "category": "DeveloperTool",
-      "copyright": "",
-      "deb": {
-        "depends": []
-      },
-      "externalBin": [],
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
         "icons/128x128@2x.png",
         "icons/icon.icns",
-        "icons/icon.ico"
+        "icons/icon.ico",
+        "icons/icon.png"
       ],
       "identifier": "com.xenblocks.voter",
-      "longDescription": "",
-      "macOS": {
-        "entitlements": null,
-        "exceptionDomain": "",
-        "frameworks": [],
-        "providerShortName": null,
-        "signingIdentity": null
-      },
-      "resources": [],
-      "shortDescription": "",
-      "targets": "all",
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": ""
-      }
+      "targets": ["dmg", "msi", "app", "deb"]
     },
     "security": {
       "csp": null
@@ -61,10 +40,10 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
         "resizable": true,
         "title": "XENBlocks Voter",
-        "width": 800
+        "width": 800,
+        "height": 600
       }
     ]
   }
