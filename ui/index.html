@@ -25,11 +25,35 @@
     border-radius: 10px;
       text-align: center;
     }
+    #startBtn:disabled {
+  background-color: gray !important;
+  color: white;
+
+}
      #startBtn:not(:disabled) {
+  background-color: #0185ff !important;
+  color: white;
+
+}
+#startBtn:not(:disabled):hover {
   background-color: #006BCE !important;
   color: white;
 
 }
+.form-control:focus {
+  background-color: #171b1f; /* Retain the same background color */
+ color: #fff;/* Ensure the text color stays the same */
+  border-color: #016be5; /* Optional: you can adjust the border color if needed */
+  outline: none;
+  box-shadow: none;
+  caret-color: #016be5;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
     .form-control {
       background-color: #222;
       color: #fff;
@@ -126,25 +150,7 @@ color: #d4d4d4;
     .output::-webkit-scrollbar-thumb:hover {
       background-color: #505252; /* Color when hovered */
     }
-    .form-control:focus {
-  background-color: #171b1f; /* Retain the same background color */
- color: #fff;/* Ensure the text color stays the same */
-  border-color: #016be5; /* Optional: you can adjust the border color if needed */
-  outline: none;
-  box-shadow: none;
-  caret-color: #016be5;
-}
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.start-btn{
- 
-  border: 2px solid   #006BCE;
-  border: none;
 
-}
 /* Remove arrows in number input for Firefox */
 
   .input-container {
@@ -284,7 +290,7 @@ text-align: center;
     </div>
   </div> 
    
-      <button type="submit" class="btn d-block " style="background-color: #016be5 !important; opacity: 1; border-color: transparent; width: 100%;"   disabled id="startBtn"><span style="  font-size: 1rem;font-weight:500;  ">Start voting </span>  <span style="margin: 0;padding: 0;  font-size: 18px;  ">&#x2794;</span> </button>
+      <button type="submit" class="btn d-block " style="opacity: 1; border-color: transparent; width: 100%;"   disabled id="startBtn"><span style="  font-size: 1rem;font-weight:500;  ">Start voting </span>  <span style="margin: 0;padding: 0;  font-size: 18px;  ">&#x2794;</span> </button>
 
    
   </div>
