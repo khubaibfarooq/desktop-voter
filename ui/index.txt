@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Litenode Voting</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #1c1c1e;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      max-width: 50%;
+      text-align: center;
+    }
+    .form-control {
+      background-color: #333;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 10px;
+    }
+    .form-label {
+color: #d4d4d4;
+    }
+    .btn {
+      background-color: #444;
+      border: none;
+      border-radius: 0;
+     
+    }
+    
+    .stop-button:hover{
+      background-color: transparent;
+    }
+    .btn:hover {
+      background-color: #555;
+    }
+    .footer-text {
+      font-size: 12px;
+      color: #777;
+      margin: 10% 10% 0;
+    }
+    .form-control::placeholder {
+      color: #a19f9f;
+    }
+    .stop-button {
+    
+      color: #007aff;
+      border: 2px solid #007aff;
+      background-color: transparent;
+    
+      border-radius: 0;
+     
+    }
+    .status-icon {
+     background-image: url('images/icon.png');
+     background-repeat: no-repeat;
+     background-size:cover;
+
+      width: 200px;
+      height: 200px;
+    
+      border-radius: 50%;
+    
+    }
+    .public-key {
+      font-size: 0.9rem;
+      color: #777;
+    }
+    .cpu-cores {
+      font-size: 0.9rem;
+      color: #0d6efd;
+    }
+    .output {
+      border: 1px solid #918e8e;
+      background-color: #1f1f1f;
+      padding: 0 2%;
+      margin-top: 5%;
+      font-size: 0.8rem;
+      border-radius: 8px;
+      color: #8e8e8e;
+      overflow: auto;
+      height: 300px;
+      margin-left: 5%;
+      margin-right: 5%;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+    .output::-webkit-scrollbar {
+      width: 8px; /* Width of the scrollbar */
+    }
+    .output::-webkit-scrollbar-track {
+      background: #444; /* Background of the scrollbar track */
+    }
+    .output::-webkit-scrollbar-thumb {
+      background-color: #505252; /* Scrollbar color */
+      border-radius: 5px; /* Round corners for the scrollbar */
+    }
+    .output::-webkit-scrollbar-thumb:hover {
+      background-color: #505252; /* Color when hovered */
+    }
+    .form-control:focus {
+  background-color: #333; /* Retain the same background color */
+ color: #fff;/* Ensure the text color stays the same */
+  border-color: #555; /* Optional: you can adjust the border color if needed */
+  outline: none; /* Remove the default outline if you don't want it */
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Remove arrows in number input for Firefox */
+
+  </style>
+</head>
+<body>
+  <img src="images/logo.png" class="ms-5 mt-5" style="width: 15%;"/>
+  <div class="container my-5">
+    <div id="voting-Started" style="display: none;" class="w-100"   >
+      <div class="status-icon mx-auto"></div>
+      <h4>Voter is active</h4>
+     
+      <p class="public-key" id="key" ></p>
+      <p class="cpu-cores" id="cores" ></p>
+    </div>
+  <div id="voting-Start">
+    <div class="mb-3">
+      <label for="publicKey" class="form-label float-start">Public key</label>
+      <input type="text" class="form-control" id="publicKeyInput" placeholder="Enter your Xolana public key">
+    </div>
+    <div class="mb-3">
+      <label for="cpuCores" class="form-label float-start">CPU cores</label>
+      <div class="input-group">
+        <input type="number" class="form-control" id="coreCount" value="1" min="1" >
+        <button class="btn btn-secondary" type="button"  onclick="document.getElementById('coreCount').stepUp()">+</button>
+
+        <button class="btn btn-secondary" type="button" style="border-radius:0 10px 10px 0;" onclick="document.getElementById('coreCount').stepDown()">-</button>
+      </div>
+    </div>
+  </div> 
+   
+      <button type="submit" class="btn btn-secondary" style="font-weight: bold; color:white !important ;" disabled id="startBtn">Start voting <span style="font-weight:900;">&#8811;</span></button>
+      <button type="submit" class="stop-button btn" id="stopBtn" style="display:none;">Stop voting  &nbsp; &#9607;</button>
+
+   
+  </div>
+  <div class="footer-text " id="footer">
+<p>
+  The voter project is a lightweight node that fetches records from the XENBLOCKS ledger and verifies them using CPU computation. It allows users to participate in the consensus by running a litenode, which processes data and submits it to the XENBLOCKS ledger. The node also generates an id.json file that identifies the user and logs all actions in a voter.log file. This helps users earn rewards by verifying and submitting data while contributing to the overall consensus of the XENBLOCKS network.
+  You can find more details here.</p> 
+  </div>
+  <div class="output  " id="output" style="display:none;">
+   
+  </div>
+
+  <!-- Include Tauri API -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+ <!--<script type="module" src="tauri.js"></script>--> 
+  <script src="/tauri.js"></script>
+        <script>
+        const { invoke } = window.__TAURI__.tauri;
+        const publicKeyInputShow = document.getElementById("key");
+        const publicKeyInput = document.getElementById('publicKeyInput');
+
+        const footer = document.getElementById('footer');
+
+
+        const coreCountSelect = document.getElementById('coreCount');
+        const Selectedcores = document.getElementById('cores');
+
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+       // const status = document.getElementById('status');
+        const log = document.getElementById('output');
+        const votingStart = document.getElementById('voting-Start');
+
+        const votingStarted = document.getElementById('voting-Started');
+
+
+        let isRunning = false;
+
+        // Populate core count options
+        invoke('get_available_cores').then((cores) => {
+          coreCountSelect.max=cores
+            // for (let i = 1; i <= cores; i++) {
+            //     const option = document.createElement('option');
+            //     option.value = i;
+            //     option.textContent = i;
+            //     coreCountSelect.appendChild(option);
+            // }
+        });
+        publicKeyInput.addEventListener('keyup', async () => {
+          const publicKey = publicKeyInput.value.trim();
+          if(publicKey.length>=44)
+         {startBtn.disabled = false;
+
+          startBtn.style.backgroundColor="#0085ff"
+        } 
+        else{ 
+          startBtn.disabled = true;
+         
+      
+          startBtn.style.backgroundColor="#484848"
+      }
+      
+        });
+
+        startBtn.addEventListener('click', async () => {
+
+            const publicKey = publicKeyInput.value.trim();
+            const coreCount = parseInt(coreCountSelect.value);
+            if (!publicKey) {
+                alert('Please enter a valid public key');
+                return;
+            }
+         
+
+            isRunning = true;
+            startBtn.style.display = "none";
+            votingStart.style.display = "none";
+            votingStarted.style.display = 'block';
+            stopBtn.style.display = 'inline';
+            // publicKeyInput.disabled = true;
+            // coreCountSelect.disabled = true;
+           // status.textContent = 'Status: Running';
+           publicKeyInputShow.textContent = publicKey;
+    Selectedcores.textContent = coreCount + " Cores";
+    
+            log.style.display="block";
+            footer.style.display="none";
+            await invoke('start_voter', { publicKey, coreCount });
+        });
+
+        stopBtn.addEventListener('click', async () => {
+            isRunning = false;
+            startBtn.style.display = "inline";
+            startBtn.disabled = true;
+            startBtn.style.backgroundColor="#484848"
+                      publicKeyInput.value = "";
+          coreCountSelect.value = "1";
+            votingStart.style.display = "block";
+            votingStarted.style.display = "none";
+
+            stopBtn.style.display = "none";
+            publicKeyInput.disabled = false;
+            coreCountSelect.disabled = false;
+            log.textContent=""
+            log.style.display="none";
+            footer.style.display="block";
+            status.textContent = 'Status: Stopped';
+            await invoke('stop_voter');
+        });
+
+        function appendToLog(message) {
+            const logEntry = typeof message === 'object' ? JSON.stringify(message, null, 2) : message;
+            log.textContent += logEntry + '\n';
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Listen for log messages from Rust
+        window.__TAURI__.event.listen('log', (event) => {
+            appendToLog(event.payload.message);
+        });
+    </script>
+</body>
+</html>

@@ -1,123 +1,407 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XENBlocks Voter</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f0f0f0;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #333;
-        }
-        button, input[type="text"], select {
-            padding: 10px;
-            margin: 5px 0;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        button {
-            background-color: #4CAF50;
-            border: none;
-            color: white;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        #log {
-            width: 100%;
-            height: 300px;
-            border: 1px solid #ccc;
-            padding: 10px;
-            font-family: monospace;
-            white-space: pre-wrap;
-            overflow-y: scroll;
-            margin-top: 20px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>XENBlocks Voter</h1>
-        <input type="text" id="publicKeyInput" placeholder="Enter your Solana public key">
-        <div>
-            <label for="coreCount">Number of cores to use:</label>
-            <select id="coreCount"></select>
-        </div>
-        <button id="startBtn">Start Voter</button>
-        <button id="stopBtn" disabled>Stop Voter</button>
-        <div id="status">Status: Stopped</div>
-        <div id="log"></div>
-    </div>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Litenode Voting</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.9.1/font/bootstrap-icons.min.css">
 
-    <script src="/tauri.js"></script>
-    <script>
+  <style>
+    body {
+      background-color: black;
+      background-image: url("images/bggrid.png");
+      color: #fff;
+  font-family: 'Roboto', sans-serif;
+    }
+    .container-main input{
+      background-color: #171b1f;
+    }
+    .container-main {
+   
+      background-color: #111317;
+      max-width: 50%;
+    border-radius: 10px;
+      text-align: center;
+    }
+     #startBtn:not(:disabled) {
+  background-color: #006BCE !important;
+  color: white;
+
+}
+    .form-control {
+      background-color: #222;
+      color: #fff;
+      border: 1px solid #292d33;
+      border-radius: 12px;
+    }
+  
+    .form-control:hover{
+      border: 1px solid #006bce;
+    }
+    
+    .form-label {
+color: #d4d4d4;
+    }
+   
+  
+    .stop-button:hover{
+      color:white;
+      background-color: #006BCE;
+    }
+   
+    .footer-text {
+      font-size: 12px;
+      color: #777;
+      margin: 5% 2% 0;
+     
+    }
+    .form-control::placeholder {
+      color: #535861;
+    }
+    .stop-button {
+    
+      color: #0d6bde;
+      border: 2px solid #0d6bde;
+      background-color: transparent;
+   
+      border-radius: 0;
+      margin-top: 5%;
+     
+    }
+    .status-icon {
+     background-image: url('images/icon.png');
+     background-repeat: no-repeat;
+     background-size:cover;
+
+      width: 200px;
+      height: 200px;
+    
+      border-radius: 50%;
+    
+    }
+    .public-key {
+      font-size: 0.9rem;
+      color: #424040;
+      margin-bottom: 1%;
+    }
+.gradient-font {
+      font-size: 1.5rem;
+      
+      background: linear-gradient(to right, #01c5ff, #0174ff);
+    -webkit-background-clip: text;
+            background-clip: text;
+    -webkit-text-fill-color: transparent;
+      font-weight: bold;
+      margin-bottom: 0;
+    }
+    .output {
+     
+    
+      background-color: #111317;
+      padding: 1%;
+     
+      font-size: 0.8rem;
+      border-radius: 0 0 8px 8px;
+      color: #a8a8a8;
+      overflow: auto;
+      min-height: 200px;
+      max-height: 800px;
+
+      font-family: monospace;
+    
+      white-space:pre-wrap;
+    }
+    .output::-webkit-scrollbar {
+      width: 8px; /* Width of the scrollbar */
+    }
+    .output::-webkit-scrollbar-track {
+      background: #444; /* Background of the scrollbar track */
+    }
+    .output::-webkit-scrollbar-thumb {
+      background-color: #505252; /* Scrollbar color */
+      border-radius: 5px; /* Round corners for the scrollbar */
+    }
+    .output::-webkit-scrollbar-thumb:hover {
+      background-color: #505252; /* Color when hovered */
+    }
+    .form-control:focus {
+  background-color: #171b1f; /* Retain the same background color */
+ color: #fff;/* Ensure the text color stays the same */
+  border-color: #016be5; /* Optional: you can adjust the border color if needed */
+  outline: none;
+  box-shadow: none;
+  caret-color: #016be5;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.start-btn{
+ 
+  border: 2px solid   #006BCE;
+  border: none;
+
+}
+/* Remove arrows in number input for Firefox */
+
+  .input-container {
+            position: relative;
+            width: 100%;
+        }
+       
+        .input-container button {
+           
+            top: 53%;
+           
+            background-color: transparent;
+            color: #656d7b;
+            border: 1px solid #656d7b;
+    padding:0 5px;
+text-align: center;
+            cursor: pointer;
+        
+            border-radius: 50%;
+        }
+        .input-container .decrement {
+     font-size: 12px;
+
+          right: 48px;
+            position: absolute; 
+           
+           
+         
+         
+        
+          
+          
+        }
+        .input-container .increment {
+            right: 20px;
+            position: absolute; 
+            font-size: 12px;
+
+          
+          
+           
+        }
+        .card{
+          border-radius: 16px;
+        }
+
+        
+       
+  </style>
+</head>
+
+
+
+
+<body>
+  <center>
+    <img src="images/logo.png" class="ms-5 mt-5" style="width: 12%; margin-bottom: 5%; "/>
+
+  </center>
+  <div class="container " id="voting-Started" style="display: none;">
+    <div class="row mb-2" >
+      <div class="col-8 px-1 ">
+      <div class="card  " style="background-color: #191b21;">
+        <div class="card-body ">
+            <h6 class="card-title ">Litnode ID</h6>
+            <p class="public-key" id="key" >fasdfasdf</p>
+            <button class="btn btn-secondary-outlined text-light me-2" style="border-color: #23252e;"><span style="color: #14ae5c; height: 8px; width: 8px;">&#x25CF;</span>  Active</button>
+            <button type="submit" class="btn text-light" id="stopBtn" style="background-color: #bf2017;" ><span style="height: 20px; width: 20px; ">&#x25FC;</span>  &nbsp;Stop</button>
+          </div>
+    </div>
+   
+   
+    </div>
+    <div class="col-4 px-1">
+      <div class="card " style="background-color: #191b21; ">
+        <div class="card-body ">
+            <p class="card-title">Processing with cores <img title="tooltip" src="images/info.png" style="height: 15px; border-radius: 100%;" alt=""></p>
+            <p class="gradient-font" id="cores" style="padding: 4% 0;" >4</p> </div>
+    </div>
+     
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-4 px-1">
+    <div class="card " style="background-color: #191b21;">
+      <div class="card-body ">
+          <h6 class="card-title">Session votes <img title="tooltip" src="images/info.png" style="height: 15px; border-radius: 100%;" alt=""></h6>
+          <p class="gradient-font" id="cores" >4</p> 
+         </div>
+  </div>
+ 
+ 
+  </div>
+  <div class="col-8 px-1">
+    <div class="card " style="background-color: #191b21;">
+      <div class="card-body ">
+          <h6 class="card-title">Last batch <img  title="tooltip" src="images/info.png" style="height: 15px; border-radius: 100%;" alt=""></h6>
+          <p class="gradient-font" id="cores" >13242134-12342134</p> </div>
+  </div>
+   
+  </div>
+</div>
+<div class="row mt-4">
+  <div class="col-12 px-1">
+  
+    <div class="card  " style="background-color: #191b21;">
+      <div class="card-body " style="padding:0; margin-bottom: 0;">
+          <h6 class="card-title px-3 pt-2">Session logs<span  style=" float:right;font-size: 1rem; color: #43474f;font-weight: 900;">  <svg xmlns="http://www.w3.org/2000/svg" style="color: #43474f; font-weight: bolder;" width="12" height="12" fill="currentColor" class="bi bi-fullscreen" viewBox="0 0 16 16">
+            <path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5M.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5m15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5"/>
+          </svg> </i>
+          &nbsp;<i class="bi bi-three-dots"></i></span></h6>
+          <div class="output" id="output" style="display:block;" ></div> </div>
+  </div>
+  </div>
+</div>
+
+  </div>
+ 
+  <div class="container-main mx-auto px-3 py-4 "  id="voting-Start" style="margin-bottom: 18%;">
+
+    
+  <div class=" mb-3"  >
+    <div class="mb-4">
+      <label for="publicKey" class="form-label float-start">Public key<sup style="color: #006bce;"> *</sup></sup></label>
+      <input type="text"  class="form-control" autocomplete="off" id="publicKeyInput" placeholder="Enter your SVM public key">
+    </div>
+    <div class="mb-4 ">
+      <label for="cpuCores" class="form-label float-start">CPU cores</label>
+      <div class="input-container py-2">
+        
+        <input type="number" readonly class="form-control "  id="coreCount" value="1" min="1"  >
+        <button class="decrement " onclick="document.getElementById('coreCount').stepDown()">	&#8722;</button>
+
+        <button class="increment "   onclick="document.getElementById('coreCount').stepUp()">&#43; </button>
+    </div>
+     
+    </div>
+  </div> 
+   
+      <button type="submit" class="btn d-block " style="background-color: #016be5 !important; opacity: 1; border-color: transparent; width: 100%;"   disabled id="startBtn"><span style="  font-size: 1rem;font-weight:500;  ">Start voting </span>  <span style="margin: 0;padding: 0;  font-size: 18px;  ">&#x2794;</span> </button>
+
+   
+  </div>
+  <div class="footer-text " id="footer"> <center>
+<p>
+  The voter project is a lightweight node that fetches records from the XENBLOCKs ledger and verifies them using CPU computation. It allows users to participate in the consensus by running a litenode, which processes data and submits it to the XENBLOCKs ledger. The node also generates an id.json file that identifies the user and logs all actions in a voter.log file. This helps users earn rewards by verifying and submitting data while contributing to the overall consensus of the XENBLOCKs network.
+<BR>
+  You can find more details <a href="https://github.com/jacklevin74/voter">here</a>.</p> </center>
+  </div>
+
+  <!-- Include Tauri API -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+ <!--<script type="module" src="tauri.js"></script>--> 
+  <script src="/tauri.js"></script>
+        <script>
         const { invoke } = window.__TAURI__.tauri;
+        const publicKeyInputShow = document.getElementById("key");
         const publicKeyInput = document.getElementById('publicKeyInput');
+
+        const footer = document.getElementById('footer');
+
+
         const coreCountSelect = document.getElementById('coreCount');
+        const Selectedcores = document.getElementById('cores');
+
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
-        const status = document.getElementById('status');
-        const log = document.getElementById('log');
+       // const status = document.getElementById('status');
+        const log = document.getElementById('output');
+        const votingStart = document.getElementById('voting-Start');
+
+        const votingStarted = document.getElementById('voting-Started');
+
 
         let isRunning = false;
 
         // Populate core count options
         invoke('get_available_cores').then((cores) => {
-            for (let i = 1; i <= cores; i++) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = i;
-                coreCountSelect.appendChild(option);
-            }
+          coreCountSelect.max=cores
+            // for (let i = 1; i <= cores; i++) {
+            //     const option = document.createElement('option');
+            //     option.value = i;
+            //     option.textContent = i;
+            //     coreCountSelect.appendChild(option);
+            // }
+        });
+        publicKeyInput.addEventListener('keyup', async () => {
+          const publicKey = publicKeyInput.value.trim();
+      
+          if(publicKey.length==44)
+         {
+          startBtn.disabled = false;
+
+        } 
+        else{ 
+          startBtn.disabled = true;
+         
+      
+      
+       
+        
+      }
+      
         });
 
         startBtn.addEventListener('click', async () => {
+
             const publicKey = publicKeyInput.value.trim();
             const coreCount = parseInt(coreCountSelect.value);
             if (!publicKey) {
                 alert('Please enter a valid public key');
                 return;
             }
+         
+
             isRunning = true;
-            startBtn.disabled = true;
-            stopBtn.disabled = false;
-            publicKeyInput.disabled = true;
-            coreCountSelect.disabled = true;
-            status.textContent = 'Status: Running';
+            startBtn.style.display = "none";
+            votingStart.style.display = "none";
+            votingStarted.style.display = 'block';
+            // publicKeyInput.disabled = true;
+            // coreCountSelect.disabled = true;
+           // status.textContent = 'Status: Running';
+           publicKeyInputShow.textContent = publicKey;
+    Selectedcores.textContent = coreCount;
+    
+          
+            
             await invoke('start_voter', { publicKey, coreCount });
         });
 
         stopBtn.addEventListener('click', async () => {
             isRunning = false;
-            startBtn.disabled = false;
-            stopBtn.disabled = true;
+            startBtn.disabled = true;
+                      publicKeyInput.value = "";
+          coreCountSelect.value = "1";
+            votingStart.style.display = "block";
+            votingStarted.style.display = "none";
+
             publicKeyInput.disabled = false;
             coreCountSelect.disabled = false;
-            status.textContent = 'Status: Stopped';
+            log.textContent=""
             await invoke('stop_voter');
         });
 
+        // function appendToLog(message) {
+        //     const logEntry = typeof message === 'object' ? JSON.stringify(message, null, 2) : message;
+        //     log.textContent += logEntry + '\n';
+        //     log.scrollTop = log.scrollHeight;
+        // }
         function appendToLog(message) {
-            const logEntry = typeof message === 'object' ? JSON.stringify(message, null, 2) : message;
-            log.textContent += logEntry + '\n';
-            log.scrollTop = log.scrollHeight;
-        }
+  // Trim leading spaces and line breaks
+  const logEntry = typeof message === 'object' ? JSON.stringify(message, null, 2) : message.trim();
+  console.log(logEntry)
+  // Append the message
+  log.textContent += logEntry.trimStart() + '\n';
+  log.scrollTop = log.scrollHeight;
+}
 
         // Listen for log messages from Rust
         window.__TAURI__.event.listen('log', (event) => {

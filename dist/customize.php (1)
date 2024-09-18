@@ -1,0 +1,179 @@
+<?php
+// Database connection
+include('../connects.php');
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Initialize variables
+$image = 'dress1.jpg';
+$category_name = 'Unknown Category';
+$main_keyword = '';
+$selected_variation_price = 0;
+
+// Check if product_id and category_id are set
+if (isset($_GET['product_id']) && isset($_GET['category_id'])) {
+    $product_id = intval($_GET['product_id']);
+    $category_id = intval($_GET['category_id']);
+
+    // Fetch product image
+    $sql_image = "SELECT pro_img_name FROM product_images WHERE product_id = $product_id";
+    $result_image = mysqli_query($conn, $sql_image);
+    if ($result_image && mysqli_num_rows($result_image) > 0) {
+        $row_image = mysqli_fetch_assoc($result_image);
+        $image = $row_image['pro_img_name'];
+    }
+
+    // Fetch category name
+    $sql_category = "SELECT category_name FROM product_category WHERE category_id = $category_id";
+    $result_category = mysqli_query($conn, $sql_category);
+    if ($result_category && mysqli_num_rows($result_category) > 0) {
+        $row_category = mysqli_fetch_assoc($result_category);
+        $category_name = $row_category['category_name'];
+        $main_keyword = explode(' ', $category_name)[1];
+    }
+}
+
+// Fetch variations
+$sql_variations = "SELECT variation_id, variation_name FROM variations";
+$result_variations = mysqli_query($conn, $sql_variations);
+$variations = [];
+while ($row = mysqli_fetch_assoc($result_variations)) {
+    $variations[] = $row;
+}
+
+// Check if a variation is selected
+$selected_variation_id = isset($_POST['variation_id']) ? intval($_POST['variation_id']) : null;
+$color_options = [];
+$other_options = [];
+if ($selected_variation_id) {
+    $sql_variation_options = "SELECT variation_type, additional_cost, description
+                              FROM `variation-options`
+                              WHERE variation_id = $selected_variation_id AND product_id = $product_id";
+    $result_variation_options = mysqli_query($conn, $sql_variation_options);
+    while ($row = mysqli_fetch_assoc($result_variation_options)) {
+        if ($row['variation_type'] === 'Color') {
+            $color_options[] = $row;
+        } else {
+            $other_options[] = $row;
+        }
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customize Your Dress</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; }
+        h1 { text-align: center; color: #333; margin: 20px; }
+        #customization-container { display: flex; justify-content: center; margin: 20px; }
+        #dressCanvas { border: 2px solid #ddd; }
+        #dropdown { margin-left: 20px; width: 300px; }
+        .color-swatch, .style-button { margin: 5px; cursor: pointer; padding: 10px; border-radius: 5px; }
+        .color-swatch { width: 50px; height: 50px; border: 2px solid #ddd; }
+        .color-swatch:hover, .style-button:hover { transform: scale(1.1); }
+        .selected { border: 2px solid #333 !important; }
+        #totalPriceContainer { text-align: center; margin-top: 20px; padding: 10px; border: 2px solid #970037; background-color: #fef0f5; color: #970037; font-weight: bold; }
+        #errorContainer { color: red; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+    <h1>Customize Your Dress</h1>
+    <div id="customization-container">
+        <canvas id="dressCanvas" width="300" height="400"></canvas>
+
+        <div id="dropdown">
+            <form method="POST" action="">
+                <label>Select Variation for <?php echo htmlspecialchars($main_keyword); ?>:</label>
+                <select id="variationSelect" name="variation_id" onchange="this.form.submit()">
+                    <option value="">-- Select Variation --</option>
+                    <?php foreach ($variations as $variation): ?>
+                        <option value="<?php echo $variation['variation_id']; ?>" <?php echo ($selected_variation_id == $variation['variation_id']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($variation['variation_name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </form>
+
+            <?php if ($selected_variation_id): ?>
+                <div id="optionsContainer">
+                    <?php if (!empty($color_options)): ?>
+                        <h4>Available Colors</h4>
+                        <?php foreach ($color_options as $option): ?>
+                            <div class="color-swatch" style="background-color: <?php echo htmlspecialchars($option['description']); ?>;"
+                                 onclick="applyColor('<?php echo htmlspecialchars($option['description']); ?>', <?php echo $option['additional_cost']; ?>)"></div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+
+                    <?php if (!empty($other_options)): ?>
+                        <h4>Available Styles</h4>
+                        <?php foreach ($other_options as $option): ?>
+                            <button class="style-button" onclick="highlightStyle(this)"><?php echo htmlspecialchars($option['variation_type']); ?></button>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+
+                <div id="totalPriceContainer">
+                    Total Price: $<span id="totalPrice">0.00</span>
+                </div>
+
+                <div id="errorContainer">Error: Unable to apply color.</div>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+    <script>
+        const productImage = "../images/<?php echo $image; ?>";
+        const canvas = new fabric.Canvas('dressCanvas');
+        let totalPrice = 0;
+        let originalImage = null;  // Store the original image object
+
+        // Load product image
+        fabric.Image.fromURL(productImage, function(img) {
+            img.set({ left: 0, top: 0, scaleX: canvas.width / img.width, scaleY: canvas.height / img.height });
+            canvas.clear().add(img);
+            originalImage = img;  // Store the image as originalImage
+        }, { crossOrigin: 'anonymous' });
+
+        // Apply selected color and update total price
+        function applyColor(color, price) {
+            try {
+                if (originalImage) {
+                    // Reset filters before applying a new one
+                    originalImage.filters = [];
+
+                    // Apply Tint filter with selected color
+                    originalImage.filters.push(new fabric.Image.filters.Tint({
+                        color: color,
+                        opacity: 0.6  // Adjust opacity for the tint (you can customize this)
+                    }));
+
+                    // Apply filters and re-render the canvas
+                    originalImage.applyFilters();
+                    canvas.renderAll();
+
+                    // Hide the error message if the color is applied successfully
+                    document.getElementById('errorContainer').style.display = 'none';
+                }
+
+                // Update total price
+                totalPrice += price;
+                document.getElementById('totalPrice').textContent = totalPrice.toFixed(2);
+            } catch (error) {
+                console.error("Error applying color:", error);
+                document.getElementById('errorContainer').style.display = 'block';
+            }
+        }
+
+        // Highlight selected style button
+        function highlightStyle(button) {
+            document.querySelectorAll('.style-button').forEach(btn => btn.classList.remove('selected'));
+            button.classList.add('selected');
+        }
+    </script>
+</body>
+</html>
